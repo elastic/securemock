@@ -22,7 +22,7 @@ You can do:
     <dependency>
       <groupId>org.elasticsearch</groupId>
       <artifactId>securemock</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
       <scope>test</scope>
     </dependency>
     ...
