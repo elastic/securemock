@@ -80,6 +80,18 @@
                   <exclude>org.hamcrest:hamcrest-core</exclude>
                 </excludes>
               </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>org.mockito:mockito-core</artifact>
+                  <excludes>
+                    <exclude>org/mockito/internal/creation/cglib/CGLIBHacker.class</exclude>
+                    <exclude>org/mockito/internal/util/reflection/AccessibilityChanger.class</exclude>
+                    <exclude>org/mockito/cglib/core/ReflectUtils*.class</exclude>
+                    <exclude>org/mockito/internal/creation/jmock/ClassImposterizer*.class</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+
               <!-- switch the Mockito classes to give a binary compatible api -->
               <relocations>
                 <relocation>
@@ -89,6 +101,7 @@
                   <include>org.mockito.Mockito</include>
                 </includes>
                 </relocation>
+
                 <relocation>
                 <pattern>org.elasticsearch.mock</pattern>
                 <shadedPattern>org.mockito</shadedPattern>
@@ -96,6 +109,40 @@
                   <include>org.elasticsearch.mock.Mockito*</include>
                 </includes>
                 </relocation>
+
+                <!-- add these replacements -->
+                <relocation>
+                <pattern>org.elasticsearch.mock.internal</pattern>
+                <shadedPattern>org.mockito.internal.creation.cglib</shadedPattern>
+                <includes>
+                  <include>org.elasticsearch.mock.internal.CGLIBHacker*</include>
+                </includes>
+                </relocation>
+
+                <relocation>
+                <pattern>org.elasticsearch.mock.internal</pattern>
+                <shadedPattern>org.mockito.internal.util.reflection</shadedPattern>
+                <includes>
+                  <include>org.elasticsearch.mock.internal.AccessibilityChanger*</include>
+                </includes>
+                </relocation>
+
+                <relocation>
+                <pattern>org.elasticsearch.mock.internal</pattern>
+                <shadedPattern>org.mockito.cglib.core</shadedPattern>
+                <includes>
+                  <include>org.elasticsearch.mock.internal.ReflectUtils*</include>
+                </includes>
+                </relocation>
+
+                <relocation>
+                <pattern>org.elasticsearch.mock.internal</pattern>
+                <shadedPattern>org.mockito.internal.creation.jmock</shadedPattern>
+                <includes>
+                  <include>org.elasticsearch.mock.internal.ClassImposterizer*</include>
+                </includes>
+                </relocation>
+
               </relocations>
             </configuration>
           </execution>

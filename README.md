@@ -15,6 +15,7 @@ Instead of:
     grant {
       // give scary permission to all code just for tests
       permission java.lang.RuntimePermission "reflectionFactoryAccess";
+      permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
     };
 
 You can do:
@@ -29,4 +30,5 @@ You can do:
     grant codeBase "/url/to/securemock.jar" {
       // only allow this jar used in tests to do this
       permission java.lang.RuntimePermission "reflectionFactoryAccess";
+      permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
     };
