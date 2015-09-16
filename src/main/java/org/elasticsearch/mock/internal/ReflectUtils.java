@@ -233,7 +233,7 @@ public class ReflectUtils {
         
     public static Object newInstance(final Constructor cstruct, final Object[] args) {
             
-        boolean flag = cstruct.isAccessible();
+        final boolean flag = cstruct.isAccessible();
         try {
             AccessController.doPrivileged(new PrivilegedAction<Void>() {
               @Override
