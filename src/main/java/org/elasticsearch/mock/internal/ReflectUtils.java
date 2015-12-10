@@ -23,6 +23,8 @@ import java.beans.*;
 import java.lang.reflect.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.security.ProtectionDomain;
 import java.util.*;
 
@@ -148,7 +150,7 @@ public class ReflectUtils {
             int dot = desc.lastIndexOf('.', lparen);
             String className = desc.substring(0, dot).trim();
             String methodName = desc.substring(dot + 1, lparen).trim();
-            return getClass(className, loader).getDeclaredMethod(methodName, parseTypes(desc, loader));
+            return doGetDeclaredMethod(getClass(className, loader), methodName, parseTypes(desc, loader));
         } catch (ClassNotFoundException e) {
             throw new CodeGenerationException(e);
         } catch (NoSuchMethodException e) {
@@ -262,19 +264,18 @@ public class ReflectUtils {
                 
     }
         
-    public static Constructor getConstructor(Class type, Class[] parameterTypes) {
+    public static Constructor getConstructor(final Class type, final Class[] parameterTypes) {
         try {
-            final Constructor constructor = type.getDeclaredConstructor(parameterTypes);
-            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<Constructor>() {
               @Override
-              public Void run() {
+              public Constructor run() throws NoSuchMethodException {
+                Constructor constructor = type.getDeclaredConstructor(parameterTypes);
                 constructor.setAccessible(true);
-                return null;
+                return constructor;
               }
             });
-            return constructor;
-        } catch (NoSuchMethodException e) {
-            throw new CodeGenerationException(e);
+        } catch (PrivilegedActionException e) {
+            throw new CodeGenerationException(e.getCause());
         }
     }
 
@@ -362,7 +363,7 @@ public class ReflectUtils {
         Class cl = type;
         while (cl != null) {
             try {
-                return cl.getDeclaredMethod(methodName, parameterTypes);
+                return doGetDeclaredMethod(cl, methodName, parameterTypes);
             } catch (NoSuchMethodException e) {
                 cl = cl.getSuperclass();
             }
@@ -374,7 +375,7 @@ public class ReflectUtils {
     public static List addAllMethods(final Class type, final List list) {
             
             
-        list.addAll(java.util.Arrays.asList(type.getDeclaredMethods()));
+        list.addAll(java.util.Arrays.asList(doGetDeclaredMethods(type)));
         Class superclass = type.getSuperclass();
         if (superclass != null) {
             addAllMethods(superclass, list);
@@ -401,7 +402,7 @@ public class ReflectUtils {
         if (!iface.isInterface()) {
             throw new IllegalArgumentException(iface + " is not an interface");
         }
-        Method[] methods = iface.getDeclaredMethods();
+        Method[] methods = doGetDeclaredMethods(iface);
         if (methods.length != 1) {
             throw new IllegalArgumentException("expecting exactly 1 method in " + iface);
         }
@@ -485,5 +486,28 @@ public class ReflectUtils {
             }
         }
         return result;
+    }
+
+    // utilities to make security checks simpler
+    private static Method[] doGetDeclaredMethods(final Class<?> loader) {
+      return AccessController.doPrivileged(new PrivilegedAction<Method[]>() {
+        @Override
+        public Method[] run() {
+          return loader.getDeclaredMethods();
+        }
+      });
+    }
+    
+    private static Method doGetDeclaredMethod(final Class<?> loader, final String name, final Class<?> ...parameterTypes) throws NoSuchMethodException {
+      try {
+        return AccessController.doPrivileged(new PrivilegedExceptionAction<Method>() {
+          @Override
+          public Method run() throws NoSuchMethodException {
+            return loader.getDeclaredMethod(name, parameterTypes);
+          }
+        });
+      } catch (PrivilegedActionException e) {
+        throw (NoSuchMethodException) e.getException();
+      }
     }
 }
